@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Org Admin · FlagHQ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --border: #dde1e9;
+      --primary: #0ea5e9;
+      --primary-hover: #0284c7;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success-bg: #dcfce7;
+      --success-fg: #16a34a;
+      --disabled-bg: #fee2e2;
+      --disabled-fg: #dc2626;
+      --text: #111827;
+      --muted: #6b7280;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      width: 100%; max-width: 720px;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;
+    }
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--primary); letter-spacing: -.5px; }
+    .badge {
+      font-size: .7rem; font-weight: 600; background: var(--primary);
+      color: #fff; padding: 2px 8px; border-radius: 20px; letter-spacing: .5px; text-transform: uppercase;
+    }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 32px; width: 100%; max-width: 480px; margin-bottom: 24px;
+    }
+    .card.wide { max-width: 720px; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+    .tab {
+      flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius);
+      background: none; font-size: .9rem; font-weight: 500; cursor: pointer; color: var(--muted);
+      transition: background .15s, color .15s;
+    }
+    .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    label { display: block; font-size: .85rem; font-weight: 500; color: var(--muted); margin-bottom: 4px; }
+    input[type="text"], input[type="password"], select {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: .95rem; outline: none;
+      transition: border-color .15s; margin-bottom: 16px; background: var(--surface);
+    }
+    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,.15); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 9px 18px; border: none; border-radius: var(--radius);
+      font-size: .9rem; font-weight: 500; cursor: pointer; transition: background .15s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: .6; cursor: default; }
+    .btn-danger  { background: var(--danger); color: #fff; }
+    .btn-danger:hover  { background: var(--danger-hover); }
+    .btn-sm { padding: 5px 10px; font-size: .8rem; }
+    .btn-ghost {
+      background: none; border: 1px solid var(--border); color: var(--text);
+    }
+    .btn-ghost:hover { background: var(--bg); }
+
+    .msg { font-size: .85rem; margin-top: 12px; min-height: 20px; }
+    .msg.error   { color: var(--danger); }
+    .msg.success { color: var(--success-fg); }
+    .hidden { display: none !important; }
+
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .top-bar h2 { font-size: 1.1rem; font-weight: 600; }
+
+    .create-row {
+      display: grid; grid-template-columns: 1fr auto auto; gap: 8px;
+      align-items: center; margin-bottom: 24px;
+    }
+    .create-row input { margin-bottom: 0; }
+    .toggle-row { display: flex; align-items: center; gap: 8px; }
+    .toggle-label { font-size: .85rem; font-weight: 500; color: var(--muted); }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left; font-size: .8rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px;
+      border-bottom: 2px solid var(--border); padding: 0 12px 10px;
+    }
+    tbody td { padding: 12px; font-size: .9rem; border-bottom: 1px solid var(--border); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #f9fafb; }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: .78rem; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+    }
+    .status-on  { background: var(--success-bg); color: var(--success-fg); }
+    .status-off { background: var(--disabled-bg); color: var(--disabled-fg); }
+
+    .actions { display: flex; gap: 6px; }
+    .empty { text-align: center; color: var(--muted); padding: 32px 0; font-size: .9rem; }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">FlagHQ</span>
+  <span class="badge">Org Admin</span>
+</header>
+
+<!-- ── Auth ─────────────────────────────────────────────────────────────────── -->
+<div id="auth-card" class="card">
+  <div class="tabs">
+    <button class="tab active" id="tab-login"  onclick="switchTab('login')">Login</button>
+    <button class="tab"        id="tab-signup" onclick="switchTab('signup')">Sign up</button>
+  </div>
+
+  <div id="signup-fields" class="hidden">
+    <label for="org-select">Organization</label>
+    <select id="org-select"><option value="">Loading…</option></select>
+  </div>
+
+  <label for="username">Username</label>
+  <input type="text" id="username" placeholder="your_username" autocomplete="username" />
+
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+
+  <button class="btn btn-primary" id="auth-btn" style="width:100%" onclick="authenticate()">Login</button>
+  <p id="auth-msg" class="msg"></p>
+</div>
+
+<!-- ── Dashboard ─────────────────────────────────────────────────────────────── -->
+<div id="dashboard-card" class="card wide hidden">
+  <div class="top-bar">
+    <h2>Feature Flags</h2>
+    <button class="btn btn-danger btn-sm" onclick="logout()">Sign out</button>
+  </div>
+
+  <div class="create-row">
+    <input type="text" id="flag-key" placeholder="feature_key (lowercase, underscores)" />
+    <label class="toggle-row toggle-label">
+      <input type="checkbox" id="flag-enabled" /> Enable
+    </label>
+    <button class="btn btn-primary" id="create-flag-btn" onclick="createFlag()">Add Flag</button>
+  </div>
+  <p id="flag-msg" class="msg"></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>Status</th>
+        <th>Updated</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="flag-tbody">
+      <tr><td colspan="4" class="empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  'use strict';
+
+  const API = 'http://localhost:3000/api';
+  let token = sessionStorage.getItem('admin_token');
+  let mode = 'login'; // 'login' | 'signup'
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  if (token) { showDashboard(); }
+  else { loadOrgs(); }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function setMsg(id, text, isError = true) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'msg ' + (isError ? 'error' : 'success');
+  }
+
+  function setLoading(btnId, loading, label) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? '<span class="spinner"></span>Working…' : label;
+  }
+
+  async function apiFetch(path, opts = {}) {
+    const headers = { 'Content-Type': 'application/json', ...opts.headers };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(API + path, { ...opts, headers });
+    if (res.status === 204) return null;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(data.error || `HTTP ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    mode = tab;
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('signup-fields').classList.toggle('hidden', tab === 'login');
+    document.getElementById('auth-btn').textContent = tab === 'login' ? 'Login' : 'Create account';
+    setMsg('auth-msg', '');
+  }
+
+  // ── Load orgs for signup dropdown ─────────────────────────────────────────
+  async function loadOrgs() {
+    try {
+      const orgs = await apiFetch('/user/orgs');
+      const sel = document.getElementById('org-select');
+      sel.innerHTML = '<option value="">-- Select organization --</option>' +
+        orgs.map((o) => `<option value="${o.id}">${escHtml(o.name)}</option>`).join('');
+    } catch (_) {
+      document.getElementById('org-select').innerHTML = '<option value="">Failed to load</option>';
+    }
+  }
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  async function authenticate() {
+    setMsg('auth-msg', '');
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) { setMsg('auth-msg', 'Username and password are required.'); return; }
+
+    setLoading('auth-btn', true, mode === 'login' ? 'Login' : 'Create account');
+
+    try {
+      if (mode === 'signup') {
+        const organization_id = document.getElementById('org-select').value;
+        if (!organization_id) { setMsg('auth-msg', 'Please select an organization.'); return; }
+        await apiFetch('/admin/signup', {
+          method: 'POST',
+          body: JSON.stringify({ username, password, organization_id }),
+        });
+        setMsg('auth-msg', 'Account created! Please log in.', false);
+        switchTab('login');
+      } else {
+        const data = await apiFetch('/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ username, password }),
+        });
+        token = data.token;
+        sessionStorage.setItem('admin_token', token);
+        showDashboard();
+      }
+    } catch (err) {
+      setMsg('auth-msg', err.message);
+    } finally {
+      setLoading('auth-btn', false, mode === 'login' ? 'Login' : 'Create account');
+    }
+  }
+
+  function logout() {
+    token = null;
+    sessionStorage.removeItem('admin_token');
+    document.getElementById('auth-card').classList.remove('hidden');
+    document.getElementById('dashboard-card').classList.add('hidden');
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    switchTab('login');
+    loadOrgs();
+  }
+
+  function showDashboard() {
+    document.getElementById('auth-card').classList.add('hidden');
+    document.getElementById('dashboard-card').classList.remove('hidden');
+    fetchFlags();
+  }
+
+  // ── Flags ─────────────────────────────────────────────────────────────────
+  async function fetchFlags() {
+    try {
+      const flags = await apiFetch('/admin/flags');
+      renderFlags(flags);
+    } catch (err) {
+      if (err.status === 401) logout();
+    }
+  }
+
+  function renderFlags(flags) {
+    const tbody = document.getElementById('flag-tbody');
+    if (!flags.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">No flags yet. Create one above.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = flags.map((f) => `
+      <tr>
+        <td><code>${escHtml(f.key)}</code></td>
+        <td>
+          <span class="status-pill ${f.is_enabled ? 'status-on' : 'status-off'}">
+            ${f.is_enabled ? '● Enabled' : '○ Disabled'}
+          </span>
+        </td>
+        <td>${new Date(f.updated_at).toLocaleString()}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="toggleFlag(${f.id}, ${!f.is_enabled})">
+              ${f.is_enabled ? 'Disable' : 'Enable'}
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteFlag(${f.id}, '${escHtml(f.key)}')">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function createFlag() {
+    setMsg('flag-msg', '');
+    const key = document.getElementById('flag-key').value.trim();
+    const is_enabled = document.getElementById('flag-enabled').checked;
+    if (!key) { setMsg('flag-msg', 'Feature key is required.'); return; }
+
+    setLoading('create-flag-btn', true, 'Add Flag');
+    try {
+      await apiFetch('/admin/flags', {
+        method: 'POST',
+        body: JSON.stringify({ key, is_enabled }),
+      });
+      document.getElementById('flag-key').value = '';
+      document.getElementById('flag-enabled').checked = false;
+      setMsg('flag-msg', `Flag "${key}" created.`, false);
+      fetchFlags();
+    } catch (err) {
+      setMsg('flag-msg', err.message);
+    } finally {
+      setLoading('create-flag-btn', false, 'Add Flag');
+    }
+  }
+
+  async function toggleFlag(id, newState) {
+    try {
+      await apiFetch(`/admin/flags/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_enabled: newState }),
+      });
+      fetchFlags();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  async function deleteFlag(id, key) {
+    if (!confirm(`Delete flag "${key}"? This cannot be undone.`)) return;
+    try {
+      await apiFetch(`/admin/flags/${id}`, { method: 'DELETE' });
+      fetchFlags();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // ── Keyboard shortcut ─────────────────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (!document.getElementById('auth-card').classList.contains('hidden')) authenticate();
+    }
+  });
+</script>
+</body>
+</html>

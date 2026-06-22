@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Admin · FlagHQ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --border: #dde1e9;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --text: #111827;
+      --muted: #6b7280;
+      --success: #16a34a;
+      --radius: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .logo { font-size: 1.4rem; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+    .badge {
+      font-size: .7rem; font-weight: 600; background: var(--primary);
+      color: #fff; padding: 2px 8px; border-radius: 20px; letter-spacing: .5px; text-transform: uppercase;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; }
+
+    label { display: block; font-size: .85rem; font-weight: 500; color: var(--muted); margin-bottom: 4px; }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .15s;
+      margin-bottom: 16px;
+    }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 9px 18px; border: none; border-radius: var(--radius);
+      font-size: .9rem; font-weight: 500; cursor: pointer; transition: background .15s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: .6; cursor: default; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: var(--danger-hover); }
+    .btn-sm { padding: 5px 12px; font-size: .8rem; }
+
+    .msg { font-size: .85rem; margin-top: 12px; min-height: 20px; }
+    .msg.error { color: var(--danger); }
+    .msg.success { color: var(--success); }
+
+    .hidden { display: none !important; }
+
+    /* Dashboard */
+    .dashboard-card { max-width: 680px; }
+
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
+    }
+    .top-bar h2 { font-size: 1.1rem; font-weight: 600; }
+
+    .create-row {
+      display: flex; gap: 8px; margin-bottom: 24px;
+    }
+    .create-row input { margin-bottom: 0; flex: 1; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left; font-size: .8rem; font-weight: 600;
+      color: var(--muted); text-transform: uppercase; letter-spacing: .5px;
+      border-bottom: 2px solid var(--border); padding: 0 12px 10px;
+    }
+    tbody td {
+      padding: 12px; font-size: .9rem; border-bottom: 1px solid var(--border);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #f9fafb; }
+
+    .empty { text-align: center; color: var(--muted); padding: 32px 0; font-size: .9rem; }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">FlagHQ</span>
+  <span class="badge">Super Admin</span>
+</header>
+
+<!-- ── Login ──────────────────────────────────────────────────────────────── -->
+<div id="login-card" class="card">
+  <h2>Sign in</h2>
+
+  <label for="username">Username</label>
+  <input type="text" id="username" placeholder="superadmin" autocomplete="username" />
+
+  <label for="password">Password</label>
+  <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+
+  <button class="btn btn-primary" id="login-btn" onclick="login()">Sign in</button>
+  <p id="login-msg" class="msg error"></p>
+</div>
+
+<!-- ── Dashboard ─────────────────────────────────────────────────────────── -->
+<div id="dashboard-card" class="card dashboard-card hidden">
+  <div class="top-bar">
+    <h2>Organizations</h2>
+    <button class="btn btn-danger btn-sm" onclick="logout()">Sign out</button>
+  </div>
+
+  <div class="create-row">
+    <input type="text" id="org-name" placeholder="New organization name" />
+    <button class="btn btn-primary" id="create-btn" onclick="createOrg()">Add</button>
+  </div>
+  <p id="org-msg" class="msg error"></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody id="org-tbody">
+      <tr><td colspan="3" class="empty">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  'use strict';
+
+  const API = 'http://localhost:3000/api/super';
+  let token = sessionStorage.getItem('sa_token');
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  if (token) showDashboard();
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function setMsg(id, text, isError = true) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'msg ' + (isError ? 'error' : 'success');
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<span class="spinner"></span>Working…'
+      : btn.dataset.label || btn.textContent;
+  }
+
+  async function apiFetch(path, opts = {}) {
+    const headers = { 'Content-Type': 'application/json', ...opts.headers };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(API + path, { ...opts, headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(data.error || `HTTP ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    setMsg('login-msg', '');
+    setLoading('login-btn', true);
+
+    try {
+      const data = await apiFetch('/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+      token = data.token;
+      sessionStorage.setItem('sa_token', token);
+      showDashboard();
+    } catch (err) {
+      setMsg('login-msg', err.message);
+    } finally {
+      setLoading('login-btn', false);
+    }
+  }
+
+  function logout() {
+    token = null;
+    sessionStorage.removeItem('sa_token');
+    document.getElementById('login-card').classList.remove('hidden');
+    document.getElementById('dashboard-card').classList.add('hidden');
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+  }
+
+  function showDashboard() {
+    document.getElementById('login-card').classList.add('hidden');
+    document.getElementById('dashboard-card').classList.remove('hidden');
+    fetchOrgs();
+  }
+
+  // ── Organizations ─────────────────────────────────────────────────────────
+  async function fetchOrgs() {
+    try {
+      const orgs = await apiFetch('/orgs');
+      renderOrgs(orgs);
+    } catch (err) {
+      if (err.status === 401) logout();
+    }
+  }
+
+  function renderOrgs(orgs) {
+    const tbody = document.getElementById('org-tbody');
+    if (!orgs.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty">No organizations yet. Create one above.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = orgs.map((o) => `
+      <tr>
+        <td>${o.id}</td>
+        <td>${escHtml(o.name)}</td>
+        <td>${new Date(o.created_at).toLocaleDateString()}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function createOrg() {
+    const name = document.getElementById('org-name').value.trim();
+    setMsg('org-msg', '');
+    if (!name) { setMsg('org-msg', 'Organization name is required.'); return; }
+
+    setLoading('create-btn', true);
+    try {
+      await apiFetch('/orgs', { method: 'POST', body: JSON.stringify({ name }) });
+      document.getElementById('org-name').value = '';
+      setMsg('org-msg', 'Organization created.', false);
+      fetchOrgs();
+    } catch (err) {
+      setMsg('org-msg', err.message);
+    } finally {
+      setLoading('create-btn', false);
+    }
+  }
+
+  // ── Keyboard shortcut ─────────────────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (!document.getElementById('login-card').classList.contains('hidden')) login();
+    }
+  });
+
+  // ── XSS guard ─────────────────────────────────────────────────────────────
+  function escHtml(str) {
+    return str.replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+</script>
+</body>
+</html>
